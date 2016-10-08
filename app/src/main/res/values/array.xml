@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gatunki_paliwa">
+        <item>Pb 95</item>
+        <item>Pb 98</item>
+        <item>ON</item>
+        <item>LPG</item>
+    </string-array>
+</resources>
