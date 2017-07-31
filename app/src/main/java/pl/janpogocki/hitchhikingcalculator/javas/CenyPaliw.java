@@ -1,4 +1,4 @@
-package pl.janpogocki.hitchhikingcalculator;
+package pl.janpogocki.hitchhikingcalculator.javas;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
