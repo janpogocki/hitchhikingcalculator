@@ -16,7 +16,7 @@ public class AboutActivity extends AppCompatActivity {
         textView6.setText("v. " + textView6.getText());
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setTitle(R.string.about_application);
+        setTitle(R.string.about_app);
     }
 
     @Override

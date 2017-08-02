@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_author">Autor aplikacji:</string>
+    <string name="about_app_desc">MotoCalc to aplikacja umożliwiająca szybkie i łatwe obliczanie kosztów grupowego przejazdu! Uśrednione ceny paliw pobierane są ze strony www.e-petrol.pl</string>
+    <string name="about_app_bug_report">\nZnalazłeś/łaś błąd? Masz propozycję? Zobaczymy, co się da zrobić. :) Skontaktuj się ze mną poprzez moją stronę internetową.\n</string>
+    <string name="about_app_copyright">Pierwotny pomysł aplikacji \"Po ile na łebka?\":\n© Dawid Furdzik</string>
+
+    <string name="gpsmessage_notification_text">Długość trasy: %1$s km</string>
+
+    <string name="problem_internet">Problem!</string>
+    <string name="gps_off_title">GPS jest wyłączony</string>
+    <string name="gps_off_text">Aby skorzystać z automatycznego obliczania długości trasy, włącz moduł GPS w Ustawieniach.</string>
+    <string name="settings">Ustawienia</string>
+    <string name="cancel">Anuluj</string>
+    <string name="show_petrol_prices">Pokaż ceny paliw</string>
+    <string name="about_app">O aplikacji</string>
+    <string name="route_length">Długość trasy (km):</string>
+    <string name="combustion">Spalanie (l/100 km):</string>
+    <string name="number_of_people">Liczba osób:</string>
+    <string name="prices_from_internet">Ceny paliw\nz internetu</string>
+    <string name="type_of_fuel">Gatunek paliwa:</string>
+    <string name="pln_per_person">PLN / OS.</string>
+    <string name="loading">Ładowanie…</string>
+    <string name="price_of_fuel">Cena paliwa (zł/l):</string>
+</resources>

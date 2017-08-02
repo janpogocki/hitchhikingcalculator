@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:id="@+id/save_defaults"
-        android:title="Zapisz domyślne wartości"
+        android:id="@+id/petrol_prices"
+        android:title="@string/show_petrol_prices"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/about_app"
-        android:title="O aplikacji"
+        android:title="@string/about_app"
         app:showAsAction="never" />
 </menu>
