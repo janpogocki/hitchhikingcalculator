@@ -1,10 +1,10 @@
 package pl.janpogocki.hitchhikingcalculator;
 
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.IBinder;
 
@@ -14,7 +14,7 @@ import pl.janpogocki.hitchhikingcalculator.javas.GeoRetriever;
 
 public class GPSService extends Service {
     AsyncTaskRunner asyncTaskRunner;
-    private static double overallDistance;
+    private static float overallDistance;
     Location [] locations;
 
     public GPSService() {
@@ -76,17 +76,15 @@ public class GPSService extends Service {
         @Override
         protected String doInBackground(String... params) {
             while (!isCancelled()){
-                geoRetriever.resetGPS();
+                geoRetriever.waitForLookup();
 
                 if (i == 0){
-                    geoRetriever.waitForLookup();
-                    locations[0] = new Location("");
+                    locations[0] = new Location(LocationManager.GPS_PROVIDER);
                     locations[0].setLatitude(geoRetriever.getLatitude());
                     locations[0].setLongitude(geoRetriever.getLongitude());
                 }
                 else {
-                    geoRetriever.waitForLookup();
-                    locations[1] = new Location("");
+                    locations[1] = new Location(LocationManager.GPS_PROVIDER);
                     locations[1].setLatitude(geoRetriever.getLatitude());
                     locations[1].setLongitude(geoRetriever.getLongitude());
 

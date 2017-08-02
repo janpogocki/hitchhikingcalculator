@@ -1,12 +1,12 @@
 package pl.janpogocki.hitchhikingcalculator.javas;
 
+import android.app.IntentService;
 import android.content.Context;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-
-import static android.content.Context.LOCATION_SERVICE;
 
 /**
  * Created by Jan on 13.04.2017.
@@ -25,10 +25,17 @@ public class GeoRetriever {
     }
 
     private void getLocation(LocationListener locationListener, Context context) {
-        Location location = null;
         try {
+            // Create a criteria object to retrieve provider
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setPowerRequirement(Criteria.POWER_HIGH);
+
             locationManager = (LocationManager) context
-                    .getSystemService(LOCATION_SERVICE);
+                    .getSystemService(IntentService.LOCATION_SERVICE);
+
+            // Get the name of the best provider
+            String provider = locationManager.getBestProvider(criteria, true);
 
             // getting GPS status
             boolean isGPSEnabled = locationManager
@@ -42,39 +49,10 @@ public class GeoRetriever {
                 // no network provider is enabled
                 gpsStatusEnabled = false;
             } else {
-                if (isNetworkEnabled) {
-                    locationManager.requestLocationUpdates(
-                            LocationManager.NETWORK_PROVIDER,
-                            0L,
-                            0.0F, locationListener);
-
-                    if (locationManager != null) {
-                        location = locationManager
-                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                        if (location != null) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                        }
-                    }
-                }
-                // if GPS Enabled get lat/long using GPS Services
-                if (isGPSEnabled) {
-                    if (location == null) {
-                        locationManager.requestLocationUpdates(
-                                LocationManager.GPS_PROVIDER,
-                                0L,
-                                0.0F, locationListener);
-
-                        if (locationManager != null) {
-                            location = locationManager
-                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                            if (location != null) {
-                                latitude = location.getLatitude();
-                                longitude = location.getLongitude();
-                            }
-                        }
-                    }
-                }
+                locationManager.requestLocationUpdates(
+                        provider,
+                        0,
+                        10, locationListener);
             }
 
         } catch (SecurityException e) {
@@ -95,12 +73,6 @@ public class GeoRetriever {
 
     public double getLongitude() {
         return longitude;
-    }
-
-    public void resetGPS(){
-        latitude = 0;
-        longitude = 0;
-        gpsStatusEnabled = true;
     }
 
     public void stopGPS(){
