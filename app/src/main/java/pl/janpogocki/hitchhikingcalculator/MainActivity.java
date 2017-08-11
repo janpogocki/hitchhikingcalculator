@@ -38,7 +38,7 @@ import pl.janpogocki.hitchhikingcalculator.javas.CenyPaliw;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText editText, editText2, editText3, editText4;
+    EditText editText, editText2, editText3, editText4, editText5;
     Switch switch1;
     TableLayout tableLayout3, tableLayout4;
     Spinner spinner;
@@ -51,18 +51,19 @@ public class MainActivity extends AppCompatActivity {
     public CenyPaliw cenypaliw = null;
 
     private void updateFinalCosts(){
-        if (!editText.getText().toString().equals("") && !editText2.getText().toString().equals("") && !editText3.getText().toString().equals("") && ((!editText4.getText().toString().equals("") && !switch1.isChecked()) || (switch1.isChecked()))) {
+        if (!editText.getText().toString().equals("") && !editText2.getText().toString().equals("") && !editText3.getText().toString().equals("") && !editText5.getText().toString().equals("") && ((!editText4.getText().toString().equals("") && !switch1.isChecked()) || (switch1.isChecked()))) {
             double editTextDouble = Double.parseDouble(editText.getText().toString());
             double editText2Double = Double.parseDouble(editText2.getText().toString());
             int editText3Integer = Integer.parseInt(editText3.getText().toString());
+            double editText5Double = Double.parseDouble(editText5.getText().toString());
 
             String settxt = "";
             try {
                 if (switch1.isChecked())
-                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, cenypaliw.getCenaPaliwa(spinner.getSelectedItem().toString())));
+                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, cenypaliw.getCenaPaliwa(spinner.getSelectedItem().toString()), editText5Double));
                 else {
                     double editText4Double = Double.parseDouble(editText4.getText().toString());
-                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, editText4Double));
+                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, editText4Double, editText5Double));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -228,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
         editText2 = (EditText) findViewById(R.id.editText2);
         editText3 = (EditText) findViewById(R.id.editText3);
         editText4 = (EditText) findViewById(R.id.editText4);
+        editText5 = (EditText) findViewById(R.id.editText5);
         switch1 = (Switch) findViewById(R.id.switch1);
         spinner = (Spinner) findViewById(R.id.spinner);
         textView7 = (TextView) findViewById(R.id.textView7);
@@ -240,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
         editText2.setText(sharedPreferences.getString("editText2", "7.00"));
         editText3.setText(sharedPreferences.getString("editText3", "1"));
         editText4.setText(sharedPreferences.getString("editText4", "3.50"));
+        editText5.setText(sharedPreferences.getString("editText5", "0.00"));
         spinner.setSelection(sharedPreferences.getInt("spinner", 0));
 
         AsyncTaskRunner runner = new AsyncTaskRunner();
@@ -374,6 +377,26 @@ public class MainActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 updateFinalCosts();
                 sharedPreferences.edit().putString("editText4", s.toString()).apply();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        // -----------------------------
+
+        editText5.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateFinalCosts();
+                sharedPreferences.edit().putString("editText5", s.toString()).apply();
             }
 
             @Override

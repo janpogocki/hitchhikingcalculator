@@ -30,11 +30,11 @@ public class CenyPaliw {
         return parsed2[0];
     }
 
-    public static double getCost4Person(double dlugosc, double spalanie, int iloscOsob, double cenaPaliwa){
+    public static double getCost4Person(double dlugosc, double spalanie, int iloscOsob, double cenaPaliwa, double dodatkoweKoszty){
         if (iloscOsob == 0)
             return 0;
         else{
-            double koszt = (dlugosc * spalanie * cenaPaliwa)/(100 * iloscOsob);
+            double koszt = ((dlugosc * spalanie * cenaPaliwa)/(100 * iloscOsob)) + (dodatkoweKoszty / iloscOsob);
             return (double) Math.round(koszt * 100) / 100;
         }
     }
