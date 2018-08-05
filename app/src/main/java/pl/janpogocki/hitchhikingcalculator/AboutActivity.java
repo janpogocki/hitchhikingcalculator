@@ -1,5 +1,7 @@
 package pl.janpogocki.hitchhikingcalculator;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -12,8 +14,13 @@ public class AboutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        TextView textView6 = (TextView) findViewById(R.id.textView6);
-        textView6.setText("v. " + textView6.getText());
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_META_DATA);
+            TextView textView6 = findViewById(R.id.textView6);
+            textView6.setText("v. " + pInfo.versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle(R.string.about_app);

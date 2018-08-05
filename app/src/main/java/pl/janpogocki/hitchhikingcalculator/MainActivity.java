@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -31,6 +32,10 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.common.GoogleApiAvailability;
+//import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Locale;
 
@@ -48,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     Menu mainMenu;
 
-    public CenyPaliw cenypaliw = null;
-
     private void updateFinalCosts(){
         if (!editText.getText().toString().equals("") && !editText2.getText().toString().equals("") && !editText3.getText().toString().equals("") && !editText5.getText().toString().equals("") && ((!editText4.getText().toString().equals("") && !switch1.isChecked()) || (switch1.isChecked()))) {
             double editTextDouble = Double.parseDouble(editText.getText().toString());
@@ -60,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
             String settxt = "";
             try {
                 if (switch1.isChecked())
-                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, cenypaliw.getCenaPaliwa(spinner.getSelectedItem().toString()), editText5Double));
+                    settxt = String.format(Locale.US, "%.2f", CenyPaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, CenyPaliw.getCenaPaliwa(spinner.getSelectedItem().toString()), editText5Double));
                 else {
                     double editText4Double = Double.parseDouble(editText4.getText().toString());
-                    settxt = String.format(Locale.US, "%.2f", cenypaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, editText4Double, editText5Double));
+                    settxt = String.format(Locale.US, "%.2f", CenyPaliw.getCost4Person(editTextDouble, editText2Double, editText3Integer, editText4Double, editText5Double));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         switch1.setChecked(sharedPreferences.getBoolean("switch1", true));
 
         try {
-            switch1.setText(cenypaliw.getDate());
+            switch1.setText(CenyPaliw.getDate());
             mainMenu.findItem(R.id.petrol_prices).setVisible(true);
         } catch (Exception e) {
             switch1.setText(R.string.problem_internet);
@@ -129,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         else
             floatingActionButton.setImageResource(R.drawable.ic_location_stop);
 
-        Intent intent = new Intent(this, GPSService.class);
+        Intent intent = new Intent(getApplicationContext(), GPSService.class);
 
         if (isMyServiceRunning(GPSService.class)) {
             stopService(intent);
@@ -218,47 +221,81 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        loadActivity();
+    }
+
+    private void loadActivity() {
+        setContentView(R.layout.activity_main);
+        invalidateOptionsMenu();
+
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        //if (status != ConnectionResult.SUCCESS) {
+        if (status != 0) {
+            googleApiAvailability.makeGooglePlayServicesAvailable(MainActivity.this)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            loadActivity();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            finish();
+                            System.exit(0);
+                        }
+                    });
+        }
+        else {
+            editText = findViewById(R.id.editText);
+            editText2 = findViewById(R.id.editText2);
+            editText3 = findViewById(R.id.editText3);
+            editText4 = findViewById(R.id.editText4);
+            editText5 = findViewById(R.id.editText5);
+            switch1 = findViewById(R.id.switch1);
+            spinner = findViewById(R.id.spinner);
+            textView7 = findViewById(R.id.textView7);
+            floatingActionButton = findViewById(R.id.fab);
+            tableLayout3 = findViewById(R.id.tableLayout3);
+            tableLayout4 = findViewById(R.id.tableLayout4);
+
+            sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+
+            editText2.setText(sharedPreferences.getString("editText2", "7.00"));
+            editText3.setText(sharedPreferences.getString("editText3", "1"));
+            editText4.setText(sharedPreferences.getString("editText4", "3.50"));
+            editText5.setText(sharedPreferences.getString("editText5", "0.00"));
+            spinner.setSelection(sharedPreferences.getInt("spinner", 0));
+
+            if (switch1.isChecked()) {
+                //włącznik włączony
+                tableLayout3.setVisibility(View.VISIBLE);
+                tableLayout4.setVisibility(View.GONE);
+            } else {
+                //włącznik wyłączony
+                tableLayout3.setVisibility(View.GONE);
+                tableLayout4.setVisibility(View.VISIBLE);
+            }
+
+            setUpAds();
+            setUpService();
+            setUpListeners();
+
+            AsyncTaskRunner runner = new AsyncTaskRunner();
+            runner.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+    }
+
+    private void setUpAds() {
         MobileAds.initialize(this, "ca-app-pub-7200725979200234/2509752468");
-        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdView mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+    }
 
-        editText = (EditText) findViewById(R.id.editText);
-        editText2 = (EditText) findViewById(R.id.editText2);
-        editText3 = (EditText) findViewById(R.id.editText3);
-        editText4 = (EditText) findViewById(R.id.editText4);
-        editText5 = (EditText) findViewById(R.id.editText5);
-        switch1 = (Switch) findViewById(R.id.switch1);
-        spinner = (Spinner) findViewById(R.id.spinner);
-        textView7 = (TextView) findViewById(R.id.textView7);
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        tableLayout3 = (TableLayout) findViewById(R.id.tableLayout3);
-        tableLayout4 = (TableLayout) findViewById(R.id.tableLayout4);
-
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-
-        editText2.setText(sharedPreferences.getString("editText2", "7.00"));
-        editText3.setText(sharedPreferences.getString("editText3", "1"));
-        editText4.setText(sharedPreferences.getString("editText4", "3.50"));
-        editText5.setText(sharedPreferences.getString("editText5", "0.00"));
-        spinner.setSelection(sharedPreferences.getInt("spinner", 0));
-
-        AsyncTaskRunner runner = new AsyncTaskRunner();
-        runner.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-        if (switch1.isChecked()) {
-            //włącznik włączony
-            tableLayout3.setVisibility(View.VISIBLE);
-            tableLayout4.setVisibility(View.GONE);
-        } else {
-            //włącznik wyłączony
-            tableLayout3.setVisibility(View.GONE);
-            tableLayout4.setVisibility(View.VISIBLE);
-        }
-
-        // SERVICE
+    private void setUpService() {
         if (isMyServiceRunning(GPSService.class)) {
             floatingActionButton.setImageResource(R.drawable.ic_location_stop);
             editText.setEnabled(false);
@@ -270,7 +307,9 @@ public class MainActivity extends AppCompatActivity {
             floatingActionButton.setImageResource(R.drawable.ic_location_start);
             editText.setEnabled(true);
         }
+    }
 
+    private void setUpListeners() {
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -292,19 +331,19 @@ public class MainActivity extends AppCompatActivity {
 
         switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            updateFinalCosts();
+                updateFinalCosts();
 
-            if (isChecked) {
-                //włącznik włączony
-                tableLayout3.setVisibility(View.VISIBLE);
-                tableLayout4.setVisibility(View.GONE);
-            } else {
-                //włącznik wyłączony
-                tableLayout3.setVisibility(View.GONE);
-                tableLayout4.setVisibility(View.VISIBLE);
-            }
+                if (isChecked) {
+                    //włącznik włączony
+                    tableLayout3.setVisibility(View.VISIBLE);
+                    tableLayout4.setVisibility(View.GONE);
+                } else {
+                    //włącznik wyłączony
+                    tableLayout3.setVisibility(View.GONE);
+                    tableLayout4.setVisibility(View.VISIBLE);
+                }
 
-            sharedPreferences.edit().putBoolean("switch1", isChecked).apply();
+                sharedPreferences.edit().putBoolean("switch1", isChecked).apply();
             }
         });
 
@@ -417,7 +456,6 @@ public class MainActivity extends AppCompatActivity {
                 updateFinalCosts();
             }
         });
-
     }
 
     private class AsyncTaskRunner extends AsyncTask<CenyPaliw, CenyPaliw, CenyPaliw> {
@@ -428,9 +466,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 cenypaliw = new CenyPaliw();
                 return cenypaliw;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return null;
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;

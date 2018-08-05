@@ -15,3 +15,11 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keep class android.** { *; }
+-keep interface android.** { *; }
+-keep public class android.** { *; }
+
+-keep class com.google.** { *; }
+-keep interface com.google.** { *; }
+-keep public class com.google.** { *; }

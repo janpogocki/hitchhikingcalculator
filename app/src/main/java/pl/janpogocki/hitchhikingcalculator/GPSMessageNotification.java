@@ -1,7 +1,7 @@
 package pl.janpogocki.hitchhikingcalculator;
 
-import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -29,7 +29,7 @@ public class GPSMessageNotification {
         final String title = res.getString(R.string.app_name);
         final String text = res.getString(R.string.gpsmessage_notification_text, distance);
 
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "motocalc")
 
                 // Set appropriate defaults for the notification light, sound,
                 // and vibration.
@@ -45,7 +45,7 @@ public class GPSMessageNotification {
 
                 // Use a default priority (recognized on devices running Android
                 // 4.1 or later)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
 
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
@@ -73,14 +73,20 @@ public class GPSMessageNotification {
         notify(context, builder.build());
     }
 
-    @TargetApi(Build.VERSION_CODES.ECLAIR)
     private static void notify(final Context context, final Notification notification) {
         final NotificationManager nm = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel nc = new NotificationChannel("motocalc", "Standardowe powiadomienie", NotificationManager.IMPORTANCE_LOW);
+            nc.enableVibration(false);
+            nc.setSound(null, null);
+            nm.createNotificationChannel(nc);
+        }
+
         nm.notify(NOTIFICATION_TAG, 0, notification);
     }
 
-    @TargetApi(Build.VERSION_CODES.ECLAIR)
     public static void cancel(final Context context) {
         final NotificationManager nm = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);

@@ -6,19 +6,23 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.HandlerThread;
 import android.os.IBinder;
 
 import java.util.Locale;
 
-import pl.janpogocki.hitchhikingcalculator.javas.GeoRetriever;
+import pl.janpogocki.hitchhikingcalculator.javas.PlayServicesGeoRetriever;
 
 public class GPSService extends Service {
-    AsyncTaskRunner asyncTaskRunner;
+    private AsyncTaskRunner asyncTaskRunner;
     private static float overallDistance;
-    Location [] locations;
+    private Location [] locations;
+    private boolean gpsStatusOk;
+    private static final String TAG = GPSService.class.getSimpleName();
 
     public GPSService() {
         overallDistance = 0;
+        gpsStatusOk = false;
         locations = new Location[2];
     }
 
@@ -31,13 +35,19 @@ public class GPSService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public void onCreate() {
         GPSMessageNotification.notify(this, "0.00");
+
+        HandlerThread handlerThread = new HandlerThread(TAG);
+        handlerThread.start();
 
         asyncTaskRunner = new AsyncTaskRunner();
         asyncTaskRunner.setContext(this);
         asyncTaskRunner.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -53,35 +63,40 @@ public class GPSService extends Service {
         asyncTaskRunner.stopGPS();
         asyncTaskRunner.cancel(false);
         GPSMessageNotification.cancel(this);
+        gpsStatusOk = false;
+    }
+
+    public void setGpsStatusOk(boolean gpsStatusOk) {
+        this.gpsStatusOk = gpsStatusOk;
     }
 
     private class AsyncTaskRunner extends AsyncTask<String, String, String> {
-        int i = 0;
-        GeoRetriever geoRetriever;
+        boolean firstGpsEntry = true;
+        PlayServicesGeoRetriever geoRetriever;
         Context context;
 
-        public void setContext(Context context) {
+        void setContext(Context context) {
             this.context = context;
         }
 
-        public void stopGPS(){
+        void stopGPS(){
             geoRetriever.stopGPS();
         }
 
         @Override
         protected void onPreExecute() {
-            geoRetriever = new GeoRetriever(context);
+            geoRetriever = new PlayServicesGeoRetriever(context);
         }
 
         @Override
         protected String doInBackground(String... params) {
-            while (!isCancelled()){
-                geoRetriever.waitForLookup();
-
-                if (i == 0){
+            while (!isCancelled() && gpsStatusOk){
+                if (firstGpsEntry){
                     locations[0] = new Location(LocationManager.GPS_PROVIDER);
                     locations[0].setLatitude(geoRetriever.getLatitude());
                     locations[0].setLongitude(geoRetriever.getLongitude());
+
+                    firstGpsEntry = false;
                 }
                 else {
                     locations[1] = new Location(LocationManager.GPS_PROVIDER);
@@ -100,8 +115,6 @@ public class GPSService extends Service {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
-                i++;
             }
 
             return null;

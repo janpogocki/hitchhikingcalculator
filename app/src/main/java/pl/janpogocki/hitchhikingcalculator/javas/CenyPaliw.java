@@ -1,26 +1,12 @@
 package pl.janpogocki.hitchhikingcalculator.javas;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-
 public class CenyPaliw {
-    public static String stringHTML = "";
+    private static String stringHTML = "";
 
-    public CenyPaliw() throws Exception {
-        String urlPetrol = "http://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw";
-        URL url = new URL(urlPetrol);
-        URLConnection connection = url.openConnection();
-
-        BufferedReader br = new BufferedReader(
-                new InputStreamReader(connection.getInputStream()));
-
-        String inputLine;
-        while ((inputLine = br.readLine()) != null) {
-            stringHTML = stringHTML + inputLine;
-        }
-        br.close();
+    public CenyPaliw() {
+        String urlPetrol = "https://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw";
+        FetchWebsite fetchWebsite = new FetchWebsite(urlPetrol);
+        stringHTML = fetchWebsite.getWebsite();
     }
 
     public static String getDate(){
@@ -39,7 +25,7 @@ public class CenyPaliw {
         }
     }
 
-    public static double getCenaPaliwa(String gatunekPaliwa) throws Exception{
+    public static double getCenaPaliwa(String gatunekPaliwa) {
         String [] parsed = stringHTML.split("<td class=\"even\">");
         String [] parsed2 = null;
         // PB98, PB95, ON, LPG = 3,4,5,6
