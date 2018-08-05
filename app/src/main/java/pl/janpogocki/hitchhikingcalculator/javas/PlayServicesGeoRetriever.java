@@ -2,16 +2,12 @@ package pl.janpogocki.hitchhikingcalculator.javas;
 
 import android.content.Context;
 import android.location.Location;
-import android.os.Looper;
-import android.support.annotation.NonNull;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import pl.janpogocki.hitchhikingcalculator.GPSService;
 
@@ -52,30 +48,24 @@ public class PlayServicesGeoRetriever {
         };
 
         locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000)
-                .setFastestInterval(5000)
-                .setMaxWaitTime(0)
-                .setSmallestDisplacement(0)
-                .setExpirationDuration(1000)
+        locationRequest.setInterval(3000)
+                .setFastestInterval(1500)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     private void startLocationUpdates() {
         try {
-            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-                @Override
-                public void onComplete(@NonNull Task<Location> task) {
-                    if (task.isSuccessful() && task.getResult() != null){
-                        Location location = task.getResult();
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
+            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult() != null){
+                    Location location = task.getResult();
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
 
-                        ((GPSService) context).setGpsStatusOk(true);
-                    }
+                    ((GPSService) context).setGpsStatusOk(true);
                 }
             });
 
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
         } catch (SecurityException e) {
             e.printStackTrace();
         }
