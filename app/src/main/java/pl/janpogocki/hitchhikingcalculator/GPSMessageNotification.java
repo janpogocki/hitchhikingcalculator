@@ -18,12 +18,7 @@ import android.support.v4.app.NotificationCompat;
  * class to create notifications in a backward-compatible way.
  */
 public class GPSMessageNotification {
-    /**
-     * The unique identifier for this type of notification.
-     */
-    private static final String NOTIFICATION_TAG = "MotoCalc_GPSMessage";
-
-    public static void notify(final Context context, final String distance) {
+    public static Notification getNotification(final Context context, final String distance){
         final Resources res = context.getResources();
 
         final String title = res.getString(R.string.app_name);
@@ -70,7 +65,15 @@ public class GPSMessageNotification {
                 // Automatically dismiss the notification when it is touched.
                 .setAutoCancel(false);
 
-        notify(context, builder.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId("motocalc");
+        }
+
+        return builder.build();
+    }
+
+    public static void notify(final Context context, final String distance) {
+        notify(context, getNotification(context, distance));
     }
 
     private static void notify(final Context context, final Notification notification) {
@@ -84,12 +87,12 @@ public class GPSMessageNotification {
             nm.createNotificationChannel(nc);
         }
 
-        nm.notify(NOTIFICATION_TAG, 0, notification);
+        nm.notify(5, notification);
     }
 
     public static void cancel(final Context context) {
         final NotificationManager nm = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.cancel(NOTIFICATION_TAG, 0);
+        nm.cancel(5);
     }
 }

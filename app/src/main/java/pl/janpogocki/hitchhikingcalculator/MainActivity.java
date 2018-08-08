@@ -1,13 +1,15 @@
 package pl.janpogocki.hitchhikingcalculator;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -15,14 +17,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -32,10 +32,8 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-//import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Locale;
 
@@ -100,26 +98,20 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.setTitle(R.string.gps_off_title);
         alertDialog.setMessage(R.string.gps_off_text);
 
-        alertDialog.setPositiveButton(R.string.settings, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog,int which) {
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                context.startActivity(intent);
-            }
+        alertDialog.setPositiveButton(R.string.settings, (dialog, which) -> {
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            context.startActivity(intent);
         });
 
-        alertDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
+        alertDialog.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
 
         alertDialog.show();
     }
 
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
+    private boolean isGPSServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
+            if (GPSService.class.getName().equals(service.service.getClassName())) {
                 return true;
             }
         }
@@ -127,22 +119,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchGPS(){
-        if (isMyServiceRunning(GPSService.class))
-            floatingActionButton.setImageResource(R.drawable.ic_location_start);
-        else
-            floatingActionButton.setImageResource(R.drawable.ic_location_stop);
+        Intent intent = new Intent(this, GPSService.class);
 
-        Intent intent = new Intent(getApplicationContext(), GPSService.class);
-
-        if (isMyServiceRunning(GPSService.class)) {
+        if (isGPSServiceRunning()) {
             stopService(intent);
+
+            floatingActionButton.setImageResource(R.drawable.ic_location_start);
             editText.setEnabled(true);
+
             asyncTaskRunnerKMListener.cancel(false);
         }
         else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                startForegroundService(intent);
+            else
+                startService(intent);
+
+            floatingActionButton.setImageResource(R.drawable.ic_location_stop);
             editText.setEnabled(false);
             editText.setText("0.00");
-            startService(intent);
 
             asyncTaskRunnerKMListener = new AsyncTaskRunnerKMListener();
             asyncTaskRunnerKMListener.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -186,11 +181,7 @@ public class MainActivity extends AppCompatActivity {
             alertDialog.setTitle("www.e-petrol.pl");
             alertDialog.setMessage(msg);
 
-            alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
+            alertDialog.setPositiveButton("OK", (dialog, which) -> dialog.cancel());
 
             alertDialog.show();
         }
@@ -199,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -213,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
                         showGPSErrorDialog(this);
                     }
                 }
-                return;
             }
         }
     }
@@ -231,21 +221,12 @@ public class MainActivity extends AppCompatActivity {
 
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
         int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
-        //if (status != ConnectionResult.SUCCESS) {
-        if (status != 0) {
+        if (status != ConnectionResult.SUCCESS) {
             googleApiAvailability.makeGooglePlayServicesAvailable(MainActivity.this)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            loadActivity();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            finish();
-                            System.exit(0);
-                        }
+                    .addOnSuccessListener(aVoid -> loadActivity())
+                    .addOnFailureListener(e -> {
+                        finish();
+                        System.exit(0);
                     });
         }
         else {
@@ -279,9 +260,9 @@ public class MainActivity extends AppCompatActivity {
                 tableLayout4.setVisibility(View.VISIBLE);
             }
 
-            setUpAds();
             setUpService();
             setUpListeners();
+            setUpAds();
 
             AsyncTaskRunner runner = new AsyncTaskRunner();
             runner.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -296,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpService() {
-        if (isMyServiceRunning(GPSService.class)) {
+        if (isGPSServiceRunning()) {
             floatingActionButton.setImageResource(R.drawable.ic_location_stop);
             editText.setEnabled(false);
 
@@ -310,41 +291,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpListeners() {
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (ContextCompat.checkSelfPermission(view.getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                } else {
-                    // check whether GPS is up or down
-                    LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE );
-                    boolean statusOfGPS = manager.isProviderEnabled(LocationManager.GPS_PROVIDER) | manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        floatingActionButton.setOnClickListener(view -> {
+            if (ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            } else {
+                // check whether GPS is up or down
+                LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                boolean statusOfGPS = manager.isProviderEnabled(LocationManager.GPS_PROVIDER) | manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-                    if (statusOfGPS)
-                        switchGPS();
-                    else {
-                        showGPSErrorDialog(view.getContext());
-                    }
+                if (statusOfGPS)
+                    switchGPS();
+                else {
+                    showGPSErrorDialog(view.getContext());
                 }
             }
         });
 
-        switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateFinalCosts();
+        switch1.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateFinalCosts();
 
-                if (isChecked) {
-                    //włącznik włączony
-                    tableLayout3.setVisibility(View.VISIBLE);
-                    tableLayout4.setVisibility(View.GONE);
-                } else {
-                    //włącznik wyłączony
-                    tableLayout3.setVisibility(View.GONE);
-                    tableLayout4.setVisibility(View.VISIBLE);
-                }
-
-                sharedPreferences.edit().putBoolean("switch1", isChecked).apply();
+            if (isChecked) {
+                //włącznik włączony
+                tableLayout3.setVisibility(View.VISIBLE);
+                tableLayout4.setVisibility(View.GONE);
+            } else {
+                //włącznik wyłączony
+                tableLayout3.setVisibility(View.GONE);
+                tableLayout4.setVisibility(View.VISIBLE);
             }
+
+            sharedPreferences.edit().putBoolean("switch1", isChecked).apply();
         });
 
         editText.addTextChangedListener(new TextWatcher() {
@@ -485,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
                 publishProgress();
 
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

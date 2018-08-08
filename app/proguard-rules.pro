@@ -23,3 +23,11 @@
 -keep class com.google.** { *; }
 -keep interface com.google.** { *; }
 -keep public class com.google.** { *; }
+
+-keep class com.crashlytics.** { *; }
+-keep interface com.crashlytics.** { *; }
+-keep public class com.crashlytics.** { *; }
+
+-keep class io.fabric.** { *; }
+-keep interface io.fabric.** { *; }
+-keep public class io.fabric.** { *; }
